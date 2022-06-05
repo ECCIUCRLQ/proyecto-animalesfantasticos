@@ -10,7 +10,8 @@ Como se mencionó anteriormente, el dispositivo tendrá la capacidad de capturar
 * Desenfoque Gaussiano: Este filtro consiste en aplicar una función matemática a una imagen para desenfocar y así crear un efecto borroso.
 * Sepia: Este filtro busca imitar las fotos antiguas las cuales eran impresas y tenían una coloración del tinte de sepia, el cual es oscuro y semi rojizo.
 # Diseño del proyecto
-![Diagrama Del sispositivo](/Diseño/Diagrama.jpg)
+![Diagrama Del dispositivo](/Diseño/Diagrama.jpg)
+![Leyenda Del sispositivo](/Diseño/Leyenda_Diagrama.jpg)
 
 ## Integrantes del repositorio actual:
 
