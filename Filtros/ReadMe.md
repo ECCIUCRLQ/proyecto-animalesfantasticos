@@ -1,7 +1,3 @@
-Integrantes del grupo:
-
-Fabián Navarro Parraga - B85610
-Esteban Rojas Carranza - C06816
 
 
 Instrucciones de compilación:
