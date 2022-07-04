@@ -41,7 +41,7 @@ is pci_device;
 param pci_hotplug = true;
 
 // constant size of buffer
-param BUFFER_SIZE = 125138;
+param BUFFER_SIZE = 125184;
 
 param IMAGE1 = "modules/pci-data-capture/image1.bmp";
 param IMAGE2 = "modules/pci-data-capture/image2.bmp";
@@ -50,40 +50,6 @@ param IMAGE4 = "modules/pci-data-capture/image4.bmp";
 
 //variable with the file handle
 session FILE * file;
-
-/*
-    simulates input data received by the device
-    recieves a path to the file that will be populate in this device registers
-*/
-
-attribute input {
-    param type = "s";
-    session char* val;
-    session int len;
-    //get handler, gets called with called from CLI or the get interface
-    method get() -> (attr_value_t) default {
-        return SIM_make_attr_string(val != NULL ? val : "");
-
-    }
-
-    //set handler, gets called with called from CLI or the set interface
-    method set(attr_value_t attr) throws default {
-        local const char* attr_str = SIM_attr_string(attr);
-        set_string(attr_str);
-
-    }
-
-    /*
-        set_string: copies the parmater char * to the internal char structure
-        the old stored value is deleted
-    */
-    method set_string(const char *ptr) {
-        if (len > 0) {delete val;}
-        len = strlen(ptr);
-        val = new char[len + 1];
-        strcpy(val, ptr);
-    }
-}
 
 
 bank pci_config {
@@ -110,16 +76,16 @@ bank regs is function_mapped_bank {
        which should match with the map_func param in one BAR */
     param function = 1;
 
-    register test_register size 4 @ 0x0 {
-        param init_val = 0x0;
+    register header_size size 4 @ 0x0 {
+        param init_val = 0x8a;
     }
 
     register buf_size size 4 @ 0x4 {
         param init_val = BUFFER_SIZE;
     }
 
-    //when command register is written with a 1 then the device outputs current data
-    //stored in the input attribute
+    /*Cuando se escribe en el registro de comando se carga la imagen
+    correspondiente*/
     register cmd size 4 @ 0x14 {
         is write;
         param init_val = 0x0;
@@ -127,7 +93,6 @@ bank regs is function_mapped_bank {
         //called on write by the processor
         method write(uint64 value) {
             local uint32 index = 0;
-            if(input.val != NULL) {
                 switch(value) {
                   case 1:
                   file = fopen(IMAGE1, "r");
@@ -141,20 +106,17 @@ bank regs is function_mapped_bank {
                   default:
                   file = fopen(IMAGE4, "r");
                   break;
-                }
-
+                  }
                 for (index = 0; index < BUFFER_SIZE; index++) {
                     local uint8 char_read = fgetc(file);
                     buffer[index].set_val(char_read);
                     log info, 4: "loaded val = 0x%x @ buffer[%d]", char_read, index;
                 }
                 fclose(file);
-            }
 
         }
     }
 
-    //for communicating initial 8 bytes of the file after command=1 and input attr value is populated
     register buffer[i < BUFFER_SIZE] size 1 @ 0x18 + i {
         is read_only;
         param init_val = 0x0;
