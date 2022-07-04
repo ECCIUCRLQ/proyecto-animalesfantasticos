@@ -103,6 +103,10 @@ void write_command_to_pci_device(uint32_t command);
 uint8_t* copy_image_buffer(uint32_t offset);
 extern void filtro_negativo(uint8_t*, size_t);
 EXPORT_SYMBOL_GPL(filtro_negativo);
+extern void filtro_difuminar(uint8_t*, size_t);
+EXPORT_SYMBOL_GPL(filtro_difuminar);
+extern void filtro_espejo(uint8_t*, size_t);
+EXPORT_SYMBOL_GPL(filtro_espejo);
 /***************************************************************************************************************/
 /* Global variables */
 /***************************************************************************************************************/
