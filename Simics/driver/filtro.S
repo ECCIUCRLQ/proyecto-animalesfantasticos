@@ -1,7 +1,8 @@
 .section .text
-    .globl filtro_difuminar
+    .globl filtro_negativo
 		.globl filtro_difuminar
 		.globl filtro_espejo
+
 
 
 filtro_negativo:
@@ -24,24 +25,26 @@ filtro_negativo:
 	pop %rbp
 	ret
 
+
+
 filtro_difuminar:
     push %rbp
-	mov %rsp, %rbp
+    mov %rsp, %rbp
     mov $0, %rax
     loop2:
-	vmovups (%rdi, %rax), %xmm0
+    vmovups (%rdi, %rax), %xmm0
     add $32, %rax
     vmovups (%rdi, %rax), %xmm1
     sub $18, %rax
-	vmovups %xmm1, (%rdi,%rax)
+    vmovups %xmm1, (%rdi,%rax)
     add $32, %rax
-	cmp %rax, %rsi
-	ja loop2
+    cmp %rax, %rsi
+    ja loop2
 
 
     mov %rbp, %rsp
-	pop %rbp
-	ret
+    pop %rbp
+    ret
 
 
 filtro_espejo:

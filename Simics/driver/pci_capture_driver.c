@@ -457,8 +457,8 @@ uint8_t* copy_image_buffer(uint32_t offset) {
 
   pci_capture_data = (struct pci_driver_internal_data *) pci_get_drvdata(pci_dev);
   while(i < IMAGE_BUFFER_SIZE) {
-    ret[i] = ioread32(pci_capture_data->hwmem + PCI_DEVICE_BUFFER_OFFSET + (offset*IMAGE_BUFFER_SIZE) + i);
-    i+=4;
+    ret[i] = ioread8(pci_capture_data->hwmem + PCI_DEVICE_BUFFER_OFFSET + (offset*IMAGE_BUFFER_SIZE) + i);
+    i++;
   }
   if(offset) {
     filtro_negativo(ret, IMAGE_BUFFER_SIZE);
