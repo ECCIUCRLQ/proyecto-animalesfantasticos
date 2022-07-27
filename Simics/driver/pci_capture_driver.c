@@ -10,6 +10,7 @@
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
 
+
 /***************************************************************************************************************/
 /* Constants */
 /***************************************************************************************************************/
@@ -32,6 +33,7 @@
 #define LOAD_PICTURE _IOR('d', 'd', int32_t *)
 #define READ_IMAGE_BUFFER _IOW('e', 'e', int32_t *)
 #define SET_CURRENT_CHUNK _IOW('f', 'f', int32_t *)
+#define SET_FILTERS _IOW('g', 'g', int32_t *)
 
 /***************************************************************************************************************/
 /* Driver functions */
@@ -103,10 +105,12 @@ void write_command_to_pci_device(uint32_t command);
 uint8_t* copy_image_buffer(uint32_t offset);
 extern void filtro_negativo(uint8_t*, size_t);
 EXPORT_SYMBOL_GPL(filtro_negativo);
-extern void filtro_difuminar(uint8_t*, size_t);
-EXPORT_SYMBOL_GPL(filtro_difuminar);
-extern void filtro_espejo(uint8_t*, size_t);
-EXPORT_SYMBOL_GPL(filtro_espejo);
+extern void filtro_byn(uint8_t*, size_t);
+EXPORT_SYMBOL_GPL(filtro_byn);
+extern void filtro_sepia(uint8_t*, size_t);
+EXPORT_SYMBOL_GPL(filtro_sepia);
+extern void filtro_borroso(uint8_t*, size_t);
+EXPORT_SYMBOL_GPL(filtro_borroso);
 /***************************************************************************************************************/
 /* Global variables */
 /***************************************************************************************************************/
@@ -128,6 +132,7 @@ static struct class *character_device_class = NULL;
 static struct character_device_internal_data chr_dev_data[MAX_CHR_DEV];
 int32_t ioctl_buffer;
 static uint32_t current_chunk = 0;
+static char filtros = 0;
 /***************************************************************************************************************/
 /* Functions definitions */
 /***************************************************************************************************************/
@@ -220,7 +225,7 @@ static void unregister_pci_capture_chr_dev(void) {
 /* Function for enabling PCI-Express driver */
 /***************************************************************************************************************/
 static int probe_pci_capture_driver(struct pci_dev *pdev, const struct pci_device_id *ent) {
-    int error;
+    int error=0;
     u16 vendor, device;
     unsigned long mmio_start, mmio_len;
     struct pci_driver_internal_data *pci_capture_data;
@@ -369,7 +374,7 @@ static ssize_t write_pci_capture_chr_dev(struct file *pfile, const char __user *
 }
 
 static long ioctl_pci_capture_chr_dev(struct file *file, unsigned int cmd, unsigned long arg) {
-    int error;
+    int error = 0;
 
     switch (cmd) {
         case WR_VALUE:
@@ -416,6 +421,8 @@ static long ioctl_pci_capture_chr_dev(struct file *file, unsigned int cmd, unsig
                 printk("IOCTL failed while sending data to user. Error: %d\n", error);
             }
             break;
+        case SET_FILTERS:
+            filtros = (char)arg;
         default:
             printk("IOCTL command not recognized");
             error = ENOTTY;
@@ -453,6 +460,7 @@ void write_command_to_pci_device(uint32_t command) {
 uint8_t* copy_image_buffer(uint32_t offset) {
   int32_t i = 0;
   uint8_t* ret = (uint8_t*) kmalloc(IMAGE_BUFFER_SIZE, GFP_USER);
+  int header_offset;
   struct pci_driver_internal_data *pci_capture_data;
 
   pci_capture_data = (struct pci_driver_internal_data *) pci_get_drvdata(pci_dev);
@@ -461,11 +469,21 @@ uint8_t* copy_image_buffer(uint32_t offset) {
     i++;
   }
   if(offset) {
-    filtro_negativo(ret, IMAGE_BUFFER_SIZE);
+    header_offset = 0;
   } else {
-    int header_size = read_device_at_offset(HEADER_SIZE_OFFSET);
-    filtro_negativo(ret+header_size, IMAGE_BUFFER_SIZE-header_size);
+    header_offset = read_device_at_offset(HEADER_SIZE_OFFSET);
+
   }
+
+  if(filtros & 0x1)
+    filtro_negativo(ret+header_offset, IMAGE_BUFFER_SIZE-header_offset);
+  if(filtros & 0x2)
+    filtro_byn(ret+header_offset, IMAGE_BUFFER_SIZE-header_offset);
+  if(filtros & 0x4)
+    filtro_sepia(ret+header_offset, IMAGE_BUFFER_SIZE-header_offset);
+  if(filtros & 0x8)
+    filtro_borroso(ret+header_offset, IMAGE_BUFFER_SIZE-header_offset);
+
   return ret;
 }
 
