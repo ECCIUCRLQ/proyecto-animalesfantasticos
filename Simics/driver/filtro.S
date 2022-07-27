@@ -9,8 +9,8 @@ filtro_negativo:
   mov $0, %rax
   jmp condition1
   loop1:
-  xorw $0xffff, (%rdi, %rax)
-  add $2, %rax
+  xorb $0xff, (%rdi, %rax)
+  inc %rax
   condition1:
   cmp %rsi, %rax
   jb loop1

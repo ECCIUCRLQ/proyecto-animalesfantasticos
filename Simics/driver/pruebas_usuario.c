@@ -15,39 +15,61 @@
 #define LOAD_PICTURE _IOR('d', 'd', int32_t *)
 #define READ_IMAGE_BUFFER _IOW('e', 'e', int32_t *)
 #define SET_CURRENT_CHUNK _IOW('f', 'f', int32_t *)
+#define SET_FILTERS _IOW('g', 'g', int32_t *)
 
 int main(){
     int fd;
     int32_t buffer_index, image;
     const char *chr_dev_name = CHARACTER_DEVICE_DRIVER_PATH;
 
-    printf("*********************************\n");
-    printf(">>> Opening character device\n");
     fd = open(chr_dev_name, O_RDWR);
     if (fd < 0) {
-        printf("Cannot open character device file...\n");
+        printf("No se pudo abrir el dispositivo\n");
         return 0;
     }
 
+    uint8_t filtros = 0;
+    int32_t input;
+    printf("Desea aplicar el filtro negativo(0=no): ");
+    scanf("%d",&input);
+    if(input){
+      filtros += 0x1;
+    }
+    printf("Desea aplicar el filtro Blanco y negro(0=no): ");
+    scanf("%d",&input);
+    if(input){
+      filtros += 0x2;
+    }
+    printf("Desea aplicar el filtro sepia(0=no): ");
+    scanf("%d",&input);
+    if(input){
+      filtros += 0x4;
+    }
+    printf("Desea aplicar el filtro difuminado(0=no): ");
+    scanf("%d",&input);
+    if(input){
+      filtros += 0x8;
+    }
+    ioctl(fd, SET_FILTERS, filtros);
     printf("Seleccione la imagen que desea leer(opciones de 1-4): ");
     scanf("%d",&image);
     ioctl(fd, LOAD_PICTURE, image);
-    uint8_t* buffer = malloc(125184);
-    
+    uint8_t* buffer = malloc(125185);
+
     //ciclo el cual llena el buffer con la imagen que deseamos leer
-    for(int i =0;i<489;i++){
+    for(int i =0;i<488;i++){
         ioctl(fd, SET_CURRENT_CHUNK, i);
-        ioctl(fd, READ_IMAGE_BUFFER, buffer-(i*256));
+        ioctl(fd, READ_IMAGE_BUFFER, buffer+(i*256));
     }
 
     FILE* pFile;
     pFile = fopen("image.bmp", "wb");
-    fwrite(buffer, 1, 125184, pFile);
+    fwrite(buffer, 1, 125185, pFile);
     fclose(pFile);
 
-
+    close(fd);
     return 0;
 
-   
+
 
 }
