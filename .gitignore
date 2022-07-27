@@ -1,0 +1,8 @@
+Simics/*
+Simics/targets/*
+Simics/targets/qsp-x86/*
+!Simics/targets/qsp-x86/
+!Simics/targets
+!Simics/targets/qsp-x86/command_file.simics
+!Simics/modules/
+!Simics/driver
